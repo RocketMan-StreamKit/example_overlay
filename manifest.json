@@ -1,4 +1,5 @@
 {
+  "id": "example_overlay",
   "name": {
     "en": "Example Flash Overlay",
     "ru": "Пример вспышки",
@@ -15,6 +16,11 @@
   "icon": "logo.png",
   "web": "index.html",
   "web_type": "overlay",
-  "web_contents": ["style.css"],
-  "permissions": ["WEB_CONTENT", "WEB_END_POINTS"]
+  "web_contents": [
+    "style.css"
+  ],
+  "permissions": [
+    "WEB_CONTENT",
+    "WEB_END_POINTS"
+  ]
 }
