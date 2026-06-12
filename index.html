@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Example Overlay</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="flash" class="flash hidden"></div>
+    <div id="content" class="content hidden">
+      <div id="message" class="message">BOOM!</div>
+      <div id="meta" class="meta"></div>
+    </div>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const settingsCode = params.get('settings') || '';
+      const token = params.get('token') || '';
+
+      const flashEl = document.getElementById('flash');
+      const contentEl = document.getElementById('content');
+      const messageEl = document.getElementById('message');
+      const metaEl = document.getElementById('meta');
+
+      const readCssColor = () => {
+        return getComputedStyle(document.documentElement)
+          .getPropertyValue('--flash-color')
+          .trim();
+      };
+
+      const playBeep = volume => {
+        try {
+          const ctx = new AudioContext();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'square';
+          osc.frequency.value = 220;
+          gain.gain.value = Math.max(0, Math.min(1, volume / 100)) * 0.35;
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.25);
+        } catch (_err) {
+          // Audio may be blocked in some browser sources.
+        }
+      };
+
+      const runEffect = async () => {
+        let volume = 100;
+        let secondsToShow = 3;
+        let flashColor = readCssColor() || '#ff1744';
+        let message = 'BOOM!';
+        let playSound = true;
+
+        const requests = [];
+
+        if (settingsCode && token) {
+          requests.push(
+            fetch(
+              `/overlay/settings/${encodeURIComponent(settingsCode)}?token=${encodeURIComponent(token)}`
+            ).then(response => response.json())
+          );
+        }
+
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        const addonId = pathParts[1] || 'example_overlay';
+        requests.push(
+          fetch(`/addon/${encodeURIComponent(addonId)}/params`).then(response =>
+            response.json()
+          )
+        );
+
+        try {
+          const results = await Promise.all(requests);
+          for (const data of results) {
+            if (!data) continue;
+            if (data.success && data.volume !== undefined) {
+              volume = Number(data.volume) || 100;
+              secondsToShow = Number(data.secondsToShow) || 3;
+            }
+            if (typeof data.flashColor === 'string' && data.flashColor) {
+              flashColor = data.flashColor;
+            }
+            if (typeof data.message === 'string' && data.message) {
+              message = data.message;
+            }
+            if (typeof data.playSound === 'boolean') {
+              playSound = data.playSound;
+            }
+          }
+        } catch (_err) {
+          // Fallback to defaults when settings are unavailable.
+        }
+
+        messageEl.textContent = message;
+        flashEl.style.background = `radial-gradient(circle at center, ${flashColor}, #000000 70%)`;
+        flashEl.classList.remove('hidden');
+        contentEl.classList.remove('hidden');
+
+        if (playSound) {
+          playBeep(volume);
+        }
+
+        window.setTimeout(() => {
+          flashEl.classList.add('fade-out');
+          contentEl.classList.add('fade-out');
+        }, Math.max(500, secondsToShow * 1000 - 400));
+
+        metaEl.textContent = `volume: ${volume}% · ${secondsToShow}s`;
+      };
+
+      runEffect();
+    </script>
+  </body>
+</html>

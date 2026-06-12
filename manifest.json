@@ -1,0 +1,20 @@
+{
+  "name": {
+    "en": "Example Flash Overlay",
+    "ru": "Пример вспышки",
+    "uk": "Приклад спалаху"
+  },
+  "description": {
+    "en": "Demo overlay effect for testing StreamKit+ overlay system.",
+    "ru": "Демонстрационный оверлей для тестирования системы оверлеев StreamKit+.",
+    "uk": "Демонстраційний оверлей для тестування системи оверлеїв StreamKit+."
+  },
+  "type": "overlay",
+  "version": "1.0.0",
+  "author": "StreamKit+",
+  "icon": "logo.png",
+  "web": "index.html",
+  "web_type": "overlay",
+  "web_contents": ["style.css"],
+  "permissions": ["WEB_CONTENT", "WEB_END_POINTS"]
+}
